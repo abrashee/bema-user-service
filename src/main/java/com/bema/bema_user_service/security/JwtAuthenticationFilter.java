@@ -57,11 +57,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         claims.get("scope", String.class)
                 );
 
-                var authorities = internalToken
-                        ? List.of(new SimpleGrantedAuthority("SCOPE_INTERNAL"))
-                        : java.util.Collections.<SimpleGrantedAuthority>emptyList();
+                List<SimpleGrantedAuthority> authorities;
 
-                var authentication = new UsernamePasswordAuthenticationToken(subject, null, authorities);
+                if (internalToken) {
+                    authorities = List.of(
+                            new SimpleGrantedAuthority("SCOPE_INTERNAL")
+                    );
+                } else {
+                    String role = claims.get("role", String.class);
+
+                    if (!"USER".equals(role) && !"ADMIN".equals(role)) {
+                        throw new IllegalArgumentException(
+                                "Missing or unsupported role"
+                        );
+                    }
+
+                    authorities = List.of(
+                            new SimpleGrantedAuthority("ROLE_" + role)
+                    );
+                }
+
+                var authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                subject,
+                                null,
+                                authorities
+                        );
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (Exception ex) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
