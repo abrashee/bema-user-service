@@ -26,18 +26,17 @@ public class UserController {
     }
 
     // ─────────────────────────────────────────────
-    // PUBLIC: list users
+    // ADMIN: list all users
     // ─────────────────────────────────────────────
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers(Authentication authentication) {
-        requireInternal(authentication);
+    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers() {
         return ResponseEntity.ok(
                 ApiResponse.success("Fetched all users", userService.getAllUsers())
         );
     }
 
     // ─────────────────────────────────────────────
-    // PUBLIC: get user by ID
+    // OWNER OR INTERNAL: get user by ID
     // ─────────────────────────────────────────────
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<UserDto>> getUserById(
@@ -55,7 +54,7 @@ public class UserController {
     }
 
     // ─────────────────────────────────────────────
-    // PUBLIC: get user by identityId (NEW CORE FLOW)
+    // OWNER OR INTERNAL: get user by identity ID
     // ─────────────────────────────────────────────
     @GetMapping("/identity/{identityId}")
     public ResponseEntity<ApiResponse<UserDto>> getUserByIdentityId(
@@ -93,7 +92,7 @@ public class UserController {
         }
 
     // ─────────────────────────────────────────────
-    // PUBLIC: update profile
+    // OWNER OR INTERNAL: update profile
     // ─────────────────────────────────────────────
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<UserDto>> updateUser(
@@ -110,7 +109,7 @@ public class UserController {
     }
 
     // ─────────────────────────────────────────────
-    // PUBLIC: delete user
+    // OWNER OR INTERNAL: delete profile
     // ─────────────────────────────────────────────
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteUser(Authentication authentication, @PathVariable Long id) {

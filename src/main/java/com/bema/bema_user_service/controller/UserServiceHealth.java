@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserServiceHealth {
     
     @GetMapping
-    public String helath() {
+    public String health() {
         String appHealth = "The application is running normally";
         return appHealth;
     }
