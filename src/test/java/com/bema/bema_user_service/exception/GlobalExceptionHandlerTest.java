@@ -15,6 +15,21 @@ class GlobalExceptionHandlerTest {
             new GlobalExceptionHandler();
 
     @Test
+    void missingUserReturnsNotFound() {
+        ResponseEntity<ApiResponse<Void>> response =
+                handler.handleNotFound(
+                        new ResourceNotFoundException("User not found")
+                );
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().message())
+                .isEqualTo("User not found");
+        assertThat(response.getBody().data()).isNull();
+    }
+
+    @Test
     void invalidPathParameterReturnsBadRequest() {
         MethodArgumentTypeMismatchException exception =
                 mock(MethodArgumentTypeMismatchException.class);
