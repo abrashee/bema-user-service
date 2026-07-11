@@ -20,10 +20,16 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenService jwtTokenService;
+    private final AccessTokenRevocationService accessTokenRevocationService;
     private final ObjectMapper objectMapper;
 
-    public JwtAuthenticationFilter(JwtTokenService jwtTokenService, ObjectMapper objectMapper) {
+    public JwtAuthenticationFilter(
+            JwtTokenService jwtTokenService,
+            AccessTokenRevocationService accessTokenRevocationService,
+            ObjectMapper objectMapper
+    ) {
         this.jwtTokenService = jwtTokenService;
+        this.accessTokenRevocationService = accessTokenRevocationService;
         this.objectMapper = objectMapper;
     }
 
@@ -38,8 +44,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 var claims = jwtTokenService.parse(token);
+                String tokenId = claims.getId();
+
+                if (tokenId == null
+                        || tokenId.isBlank()
+                        || accessTokenRevocationService.isRevoked(tokenId)) {
+                    throw new IllegalArgumentException("Revoked or non-revocable token");
+                }
+
                 String subject = claims.getSubject();
-                boolean internalToken = "internal".equalsIgnoreCase(claims.get("scope", String.class));
+                boolean internalToken = "internal".equalsIgnoreCase(
+                        claims.get("scope", String.class)
+                );
 
                 var authorities = internalToken
                         ? List.of(new SimpleGrantedAuthority("SCOPE_INTERNAL"))
