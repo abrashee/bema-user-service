@@ -7,6 +7,7 @@ import com.bema.bema_user_service.dto.common.ApiResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 class GlobalExceptionHandlerTest {
@@ -26,6 +27,21 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().message())
                 .isEqualTo("User not found");
+        assertThat(response.getBody().data()).isNull();
+    }
+
+    @Test
+    void unsupportedMethodReturnsMethodNotAllowed() {
+        ResponseEntity<ApiResponse<Void>> response =
+                handler.handleMethodNotAllowed(
+                        new HttpRequestMethodNotSupportedException("PATCH")
+                );
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().message())
+                .isEqualTo("Method not allowed");
         assertThat(response.getBody().data()).isNull();
     }
 
