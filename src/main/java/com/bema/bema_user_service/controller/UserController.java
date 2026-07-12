@@ -1,5 +1,6 @@
 package com.bema.bema_user_service.controller;
 
+import com.bema.bema_user_service.audit.UserAuditLogger;
 import java.util.List;
 
 import org.springframework.security.core.Authentication;
@@ -21,9 +22,14 @@ import org.springframework.security.access.AccessDeniedException;
 public class UserController {
 
     private final UserService userService;
+    private final UserAuditLogger auditLogger;
 
-    public UserController(UserService userService) {
+    public UserController(
+            UserService userService,
+            UserAuditLogger auditLogger
+    ) {
         this.userService = userService;
+        this.auditLogger = auditLogger;
     }
 
     // ─────────────────────────────────────────────
@@ -87,6 +93,13 @@ public class UserController {
                 )
         );
 
+        auditLogger.success(
+                "USER_PROFILE_CREATE",
+                actorId(authentication),
+                user.id(),
+                user.identityId()
+        );
+
         return ResponseEntity.ok(
                 ApiResponse.success("Internal user created", user)
         );
@@ -103,9 +116,18 @@ public class UserController {
     ) {
         UserDto existing = userService.getUserById(id);
         requireOwnerOrInternal(authentication, existing.identityId());
+
+        UserDto updated = userService.updateUser(id, userUpdateDto);
+
+        auditLogger.success(
+                "USER_PROFILE_UPDATE",
+                actorId(authentication),
+                updated.id(),
+                updated.identityId()
+        );
+
         return ResponseEntity.ok(
-                ApiResponse.success("User updated",
-                        userService.updateUser(id, userUpdateDto))
+                ApiResponse.success("User updated", updated)
         );
     }
 
@@ -118,6 +140,13 @@ public class UserController {
         requireOwnerOrInternal(authentication, existing.identityId());
         userService.deleteUser(id);
 
+        auditLogger.success(
+                "USER_PROFILE_DELETE",
+                actorId(authentication),
+                id,
+                existing.identityId()
+        );
+
         return ResponseEntity.ok(
                 ApiResponse.success("User deleted successfully", null)
         );
@@ -126,6 +155,12 @@ public class UserController {
     private void requireInternal(Authentication authentication) {
         if (authentication == null || authentication.getAuthorities().stream()
                 .noneMatch(authority -> "SCOPE_INTERNAL".equals(authority.getAuthority()))) {
+            auditLogger.denied(
+                    "USER_INTERNAL_ACCESS",
+                    actorId(authentication),
+                    null,
+                    "MISSING_INTERNAL_SCOPE"
+            );
             throw new AccessDeniedException("Forbidden");
         }
     }
@@ -136,7 +171,19 @@ public class UserController {
         boolean owner = authentication != null && identityId.equals(authentication.getName());
 
         if (!internal && !owner) {
+            auditLogger.denied(
+                    "USER_RESOURCE_ACCESS",
+                    actorId(authentication),
+                    identityId,
+                    "NOT_OWNER_OR_INTERNAL"
+            );
             throw new AccessDeniedException("Forbidden");
         }
+    }
+
+    private String actorId(Authentication authentication) {
+        return authentication == null
+                ? null
+                : authentication.getName();
     }
 }

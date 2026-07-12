@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 
+import com.bema.bema_user_service.audit.UserAuditLogger;
 import com.bema.bema_user_service.exception.GlobalExceptionHandler;
 import com.bema.bema_user_service.service.serviceInterface.UserService;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -26,11 +27,13 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 class UserControllerValidationTest {
 
     private UserService userService;
+    private UserAuditLogger auditLogger;
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         userService = mock(UserService.class);
+        auditLogger = mock(UserAuditLogger.class);
 
         ObjectMapper objectMapper = new ObjectMapper()
                 .findAndRegisterModules()
@@ -44,7 +47,7 @@ class UserControllerValidationTest {
         validator.afterPropertiesSet();
 
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new UserController(userService))
+                .standaloneSetup(new UserController(userService, auditLogger))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setValidator(validator)
                 .setMessageConverters(
