@@ -13,6 +13,7 @@ import com.bema.bema_user_service.dto.user.UserDto;
 import com.bema.bema_user_service.dto.user.UserUpdateDto;
 import com.bema.bema_user_service.service.serviceInterface.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.security.access.AccessDeniedException;
 
 @RestController
@@ -41,7 +42,7 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<UserDto>> getUserById(
             Authentication authentication,
-            @PathVariable Long id
+            @PathVariable @Positive Long id
     ) {
         UserDto user = userService.getUserById(id);
         requireOwnerOrInternal(authentication, user.identityId());
@@ -97,7 +98,7 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<UserDto>> updateUser(
             Authentication authentication,
-            @PathVariable Long id,
+            @PathVariable @Positive Long id,
             @Valid @RequestBody UserUpdateDto userUpdateDto
     ) {
         UserDto existing = userService.getUserById(id);
@@ -112,7 +113,7 @@ public class UserController {
     // OWNER OR INTERNAL: delete profile
     // ─────────────────────────────────────────────
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteUser(Authentication authentication, @PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteUser(Authentication authentication, @PathVariable @Positive Long id) {
         UserDto existing = userService.getUserById(id);
         requireOwnerOrInternal(authentication, existing.identityId());
         userService.deleteUser(id);

@@ -2,6 +2,7 @@ package com.bema.bema_user_service.controller;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -50,6 +51,17 @@ class UserControllerValidationTest {
                         new MappingJackson2HttpMessageConverter(objectMapper)
                 )
                 .build();
+    }
+
+    @Test
+    void rejectsNonPositiveUserId() throws Exception {
+        mockMvc.perform(get("/api/users/0")
+                        .principal(internalAuthentication()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Invalid request parameter"));
+
+        verifyNoInteractions(userService);
     }
 
     @Test
