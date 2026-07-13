@@ -1,15 +1,26 @@
 # Stage 1: Build
 FROM maven:3.9.11-eclipse-temurin-21 AS build
+
 WORKDIR /app
+
 COPY pom.xml .
 COPY src ./src
+
 RUN mvn clean package -DskipTests
+
 
 # Stage 2: Run
 FROM eclipse-temurin:21-jdk-jammy
+
+RUN groupadd --system --gid 10001 bema \
+    && useradd --system --uid 10001 --gid bema --home-dir /app --shell /usr/sbin/nologin bema
+
 WORKDIR /app
-COPY --from=build /app/target/bema-user-service-0.0.1-SNAPSHOT.jar app.jar
+
+COPY --chown=bema:bema --from=build /app/target/bema-user-service-0.0.1-SNAPSHOT.jar app.jar
+
+USER bema
+
 EXPOSE 8081
-ENTRYPOINT ["java","-jar","app.jar"]
 
-
+ENTRYPOINT ["java", "-jar", "app.jar"]
