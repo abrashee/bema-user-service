@@ -14,10 +14,15 @@
 	<name>bema-user-service</name>
 	<description>User Service for Bema</description>
 	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://spdx.org/licenses/MIT.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+<developers>
 		<developer/>
 	</developers>
 	<scm>
